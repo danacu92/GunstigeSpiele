@@ -22,9 +22,6 @@ class SearchSteamController < ApplicationController
         monedas=divisas()
         @resultado = []
         @nuevoScrap=scrap_steam_product(id,title)
-        if @nuevoScrap == 0
-          return  render json: {Title:title , Enable:"UNAVAILABLE"}
-        end 
         @resultado<<@nuevoScrap
         @nuevoScrap=scrap_nuuvem(title,monedas[:Real])
         if @nuevoScrap != 0
@@ -47,12 +44,13 @@ class SearchSteamController < ApplicationController
         else    
             scrap_precio = doc.css('div.game_purchase_price')[0]
         end
+        linkImage = doc.css("img.game_header_image_full").attr('src').text
         if scrap_precio !=nil
             string_precio = scrap_precio.text
             precio= (string_precio.gsub(/\D+/, '')).to_i 
-            return {Title:title, Cost:precio, CostoConvertido:precio ,Url:url_product, Currency:'Peso', Store:'Steam', Enable:'OK'}
+            return {Title:title, Cost:precio, CostoConvertido:precio ,Url:url_product, Currency:'Peso', Store:'Steam', Enable:'OK', }
         else
-            return 0 
+            return {Title:title, Store:'Steam', Enable:'UNAVAILABLE', Image: linkImage}
         end      
     end
 
