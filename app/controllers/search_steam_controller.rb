@@ -48,7 +48,7 @@ class SearchSteamController < ApplicationController
         if scrap_precio !=nil
             string_precio = scrap_precio.text
             precio= (string_precio.gsub(/\D+/, '')).to_i 
-            return {Title:title, Cost:precio, CostoConvertido:precio ,Url:url_product, Currency:'Peso', Store:'Steam', Enable:'OK', }
+            return {Title:title, Cost:precio, CostoConvertido:precio ,Url:url_product, Currency:'Peso', Store:'Steam', Enable:'OK',Image: linkImage }
         else
             return {Title:title, Store:'Steam', Enable:'UNAVAILABLE', Image: linkImage}
         end      
