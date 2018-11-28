@@ -29,20 +29,27 @@ class SearchSteamController < ApplicationController
         @nuevoScrap=scrap_nuuvem(title,monedas[:Real])
         if @nuevoScrap != 0
             @resultado<<@nuevoScrap
-        end     
+        end
+        @nuevoScrap=scrap_gate(title,monedas[:Dolar])
+        if @nuevoScrap != 0
+            @resultado<<@nuevoScrap
+        end
        return render json: @resultado   
             
     end
 
     def scrap_steam_product(id, title)
-
         require 'open-uri'
         url_product = "https://store.steampowered.com/app/"+ id
         doc = Nokogiri::HTML(open(url_product))
-        scrap_precio = doc.css('div.game_purchase_price')[0]
+        if doc.css('div.discount_pct')[0] != nil
+            scrap_precio = doc.css('div.discount_final_price')[0]
+        else    
+            scrap_precio = doc.css('div.game_purchase_price')[0]
+        end
         if scrap_precio !=nil
             string_precio = scrap_precio.text
-            precio= ((string_precio.split("$U"))[1]).to_i 
+            precio= (string_precio.gsub(/\D+/, '')).to_i 
             return {Title:title, Cost:precio, CostoConvertido:precio ,Url:url_product, Currency:'Peso', Store:'Steam', Enable:'OK'}
         else
             return 0 
@@ -69,7 +76,6 @@ class SearchSteamController < ApplicationController
             if (title_match(title,title_temp)==true)
                 string_precio = entry.css('span.integer').text + ((entry.css('span.decimal').text).gsub(',', '.'))
                 url_product= entry.css('a.product-card--wrapper').attr('href').text
-                puts(url_product)
                 precio = string_precio.to_f
                 costo_convertido = (string_precio.to_f * real.to_f).round
                 if (revisar_region (url_product))
@@ -82,6 +88,26 @@ class SearchSteamController < ApplicationController
         return 0
     end
 
+    def scrap_gate(title, dolar)
+        require 'open-uri'
+        encoded_url = URI.encode("https://latam.gamersgate.com/games?prio=relevance&q="+ title)
+        doc = Nokogiri::HTML(open(encoded_url))
+        entries = doc.css('li.odd')
+        entries.each do |entry|
+            title_temp = entry.css('a.ttl').attr('title').text
+            if (title_match(title,title_temp)==true)
+                string_precio = (entry.css('span.bold.red.big').text).gsub('$', '')
+                if string_precio == ""
+                    string_precio = (entry.css('span.textstyle1').text).gsub('$', '')
+                end    
+                url_product= entry.css('a.ttl').attr('href').text
+                precio = string_precio.to_f
+                costo_convertido = (string_precio.to_f * dolar.to_f).round
+                return  {Title:title, Cost:precio, CostoConvertido:costo_convertido , Url:url_product, Currency:'Dolar', Store:'Gamers Gate', Enable:'OK'}
+            end
+        end
+        return 0
+    end
 ##########################################################    Metodos Auxiliares     ##########################################################################3
 
     def revisar_region(url)
