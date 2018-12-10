@@ -112,7 +112,7 @@ class SearchSteamController < ApplicationController
         require 'open-uri'
         doc = Nokogiri::HTML(open(url))
         region = doc.css('div.product-widget--content').text
-        if ((region.include? "Latin") ||  (region.include? "Uruguay"))
+        if ((region.include? "Latin") ||  (region.include? "Uruguay")|| (region.include? "South"))
             return true
         else 
             return false 
